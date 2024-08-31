@@ -62,29 +62,47 @@ async function initDatabase() {
 const conversationContexts = new Map();
 
 async function initDatabase() {
-  return new Promise((resolve, reject) => {
-    db = new sqlite3.Database(DB_FILE, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        db.run(`CREATE TABLE IF NOT EXISTS chat_history (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          conversation_id TEXT,
-          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-          user_input TEXT,
-          ai_response TEXT
-        )`, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
+    return new Promise((resolve, reject) => {
+        db = new sqlite3.Database(DB_FILE, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                db.run(`CREATE TABLE IF NOT EXISTS chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            user_input TEXT,
+            ai_response TEXT
+          )`, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        // Check if conversation_id column exists
+                        db.all("PRAGMA table_info(chat_history)", (err, rows) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                const conversationIdExists = rows.some(row => row.name === 'conversation_id');
+                                if (!conversationIdExists) {
+                                    // Add conversation_id column if it doesn't exist
+                                    db.run("ALTER TABLE chat_history ADD COLUMN conversation_id TEXT", (err) => {
+                                        if (err) {
+                                            reject(err);
+                                        } else {
+                                            console.log("Added conversation_id column to chat_history table");
+                                            resolve();
+                                        }
+                                    });
+                                } else {
+                                    resolve();
+                                }
+                            }
+                        });
+                    }
+                });
+            }
         });
-      }
     });
-  });
 }
-
 async function loadData() {
     try {
         const carDataRaw = await fs.readFile(CAR_DATA_FILE, 'utf8');

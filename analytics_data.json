@@ -16,5 +16,28 @@
       "responseLength": 467,
       "imagesShown": 0
     }
+  },
+  {
+    "timestamp": "2024-08-31T19:52:21.390Z",
+    "eventName": "chat_error",
+    "eventProperties": {
+      "error": "SQLITE_ERROR: table chat_history has no column named conversation_id"
+    }
+  },
+  {
+    "timestamp": "2024-08-31T19:52:32.058Z",
+    "eventName": "chat_error",
+    "eventProperties": {
+      "error": "SQLITE_ERROR: table chat_history has no column named conversation_id"
+    }
+  },
+  {
+    "timestamp": "2024-08-31T19:56:25.079Z",
+    "eventName": "chat_interaction",
+    "eventProperties": {
+      "input": "hi",
+      "responseLength": 103,
+      "imagesShown": 0
+    }
   }
 ]
