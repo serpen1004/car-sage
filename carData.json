@@ -1,0 +1,42 @@
+[
+    {
+      "model": "Toyota Camry",
+      "year": 2022,
+      "engine": "2.5L 4-cylinder",
+      "horsepower": 203,
+      "mpg": 28,
+      "price": 25295
+    },
+    {
+      "model": "Honda Accord",
+      "year": 2022,
+      "engine": "1.5L Turbocharged 4-cylinder",
+      "horsepower": 192,
+      "mpg": 30,
+      "price": 26120
+    },
+    {
+      "model": "Ford Mustang",
+      "year": 2022,
+      "engine": "2.3L EcoBoost 4-cylinder",
+      "horsepower": 310,
+      "mpg": 21,
+      "price": 27470
+    },
+    {
+      "model": "Tesla Model 3",
+      "year": 2022,
+      "engine": "Electric",
+      "horsepower": 283,
+      "mpg": 134,
+      "price": 44990
+    },
+    {
+      "model": "Chevrolet Corvette",
+      "year": 2022,
+      "engine": "6.2L V8",
+      "horsepower": 490,
+      "mpg": 16,
+      "price": 62195
+    }
+  ]
