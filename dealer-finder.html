@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Dealer Finder</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f4;
+            --text-color: #333;
+            --input-bg: #fff;
+            --input-border: #ccc;
+            --button-bg: #007bff;
+            --button-text: #fff;
+            --card-bg: #fff;
+            --transition-speed: 0.3s;
+        }
+
+        .dark-mode {
+            --bg-color: #333;
+            --text-color: #f4f4f4;
+            --input-bg: #555;
+            --input-border: #777;
+            --button-bg: #0056b3;
+            --button-text: #fff;
+            --card-bg: #444;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all var(--transition-speed);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            cursor: pointer;
+            transition: background-color var(--transition-speed), transform var(--transition-speed);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #dealerResults {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+        }
+
+        .dealer-card {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        #darkModeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px;
+            border-radius: 50%;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            cursor: pointer;
+            transition: background-color var(--transition-speed), transform var(--transition-speed);
+        }
+
+        #darkModeToggle:hover {
+            transform: scale(1.1);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color var(--transition-speed);
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <button id="darkModeToggle">🌓</button>
+    <div class="container">
+        <a href="index.html" class="back-button">← Back to Main Page</a>
+        <h1>Car Dealer Finder</h1>
+        <input type="text" id="city" placeholder="Enter city">
+        <input type="text" id="state" placeholder="Enter state">
+        <input type="text" id="country" placeholder="Enter country">
+        <button onclick="findDealers()">Find Dealers</button>
+        <div id="dealerResults"></div>
+    </div>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+
+        async function findDealers() {
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const country = document.getElementById('country').value;
+
+            const response = await fetch('/find-dealers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ city, state, country })
+            });
+
+            const dealers = await response.json();
+            displayDealers(dealers);
+        }
+
+        function displayDealers(dealers) {
+            const resultsDiv = document.getElementById('dealerResults');
+            resultsDiv.innerHTML = '';
+
+            if (dealers.length === 0) {
+                resultsDiv.innerHTML = '<p>No dealers found in the specified location.</p>';
+                return;
+            }
+
+            dealers.forEach(dealer => {
+                const dealerCard = document.createElement('div');
+                dealerCard.className = 'dealer-card';
+                dealerCard.innerHTML = `
+                    <h3>${dealer.name}</h3>
+                    <p>Address: ${dealer.address}</p>
+                    <p>Phone: ${dealer.phone}</p>
+                    <p>Website: <a href="${dealer.website}" target="_blank">${dealer.website}</a></p>
+                `;
+                resultsDiv.appendChild(dealerCard);
+            });
+        }
+    </script>
+</body>
+</html>

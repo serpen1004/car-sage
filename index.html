@@ -81,6 +81,7 @@
             color: var(--button-text);
             border: none;
             cursor: pointer;
+            padding-bottom: 3rem;
             transition: background-color var(--transition-speed), transform var(--transition-speed);
         }
 
@@ -93,7 +94,7 @@
             transform: translateY(1px);
         }
 
-        #botResponse, #comparisonResult {
+        #botResponse, #comparisonResult, #chatHistory, #favoriteResponses {
             margin-top: 20px;
             padding: 20px;
             border: 1px solid var(--input-border);
@@ -109,27 +110,49 @@
             transform: translateY(0);
         }
 
-        #imageContainer {
+        #chatHistory, #favoriteResponses {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .image-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             margin-top: 20px;
         }
 
-        #imageContainer img {
-            max-width: 200px;
+        .lazy-image-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
             margin: 10px;
-            border: 1px solid var(--input-border);
+            background-color: #f0f0f0;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
             border-radius: 8px;
-            padding: 5px;
-            transition: all var(--transition-speed);
-            opacity: 0;
-            transform: scale(0.9);
         }
 
-        #imageContainer img.show {
+        .lazy-image {
+            max-width: 100%;
+            max-height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .lazy-image.loaded {
             opacity: 1;
-            transform: scale(1);
+        }
+
+        .image-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #999;
         }
 
         #darkModeToggle {
@@ -150,38 +173,27 @@
             transform: scale(1.1);
         }
 
-        #chatHistory {
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid var(--input-border);
-            border-radius: 8px;
-            background-color: var(--card-bg);
-            max-height: 300px;
-            overflow-y: auto;
-            transition: all var(--transition-speed);
-        }
-
-        .chat-entry {
+        .chat-entry, .favorite-entry {
             margin-bottom: 15px;
             padding: 10px;
             border-radius: 5px;
             background-color: rgba(0,0,0,0.05);
         }
 
-        .chat-entry:nth-child(odd) {
+        .chat-entry:nth-child(odd), .favorite-entry:nth-child(odd) {
             background-color: rgba(0,0,0,0.02);
         }
 
-        .chat-entry .timestamp {
+        .timestamp {
             font-size: 0.8em;
             color: #888;
         }
 
-        .chat-entry .user-input {
+        .user-input {
             font-weight: bold;
         }
 
-        .chat-entry .ai-response {
+        .ai-response {
             margin-top: 5px;
         }
 
@@ -198,29 +210,6 @@
             transform: scale(1.2);
         }
 
-        #favoriteResponses {
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid var(--input-border);
-            border-radius: 8px;
-            background-color: var(--card-bg);
-            max-height: 300px;
-            overflow-y: auto;
-            transition: all var(--transition-speed);
-        }
-
-        .favorite-entry {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: rgba(0,0,0,0.05);
-            position: relative;
-        }
-
-        .favorite-entry:nth-child(odd) {
-            background-color: rgba(0,0,0,0.02);
-        }
-
         .remove-favorite {
             position: absolute;
             top: 5px;
@@ -232,14 +221,6 @@
             color: #ff4444;
         }
 
-        .favorite-entry .user-input {
-            font-weight: bold;
-        }
-
-        .favorite-entry .ai-response {
-            margin-top: 5px;
-        }
-
         @media (max-width: 600px) {
             input[type="text"], button {
                 font-size: 14px;
@@ -249,18 +230,22 @@
 </head>
 <body>
     <button id="darkModeToggle">🌓</button>
-    <div class="container">
+    <div class="container" style="padding-top: 5rem;">
         <h1>Chat with Car Expert Bot</h1>
         <input type="text" id="userInput" placeholder="Ask about cars...">
         <button onclick="sendMessage()">Send</button>
         <div id="botResponse"></div>
-        <div id="imageContainer"></div>
+        <div id="imageContainer" class="image-container"></div>
 
         <h2>Compare Cars</h2>
         <input type="text" id="car1" placeholder="Enter first car model">
         <input type="text" id="car2" placeholder="Enter second car model">
         <button onclick="compareCars()">Compare</button>
         <div id="comparisonResult"></div>
+
+        <h2>Find Car Dealers</h2>
+        <a href="dealer-finder.html" class="button">Go to Dealer Finder</a>
+
         <h2>Chat History</h2>
         <div id="chatHistory"></div>
 
@@ -269,14 +254,12 @@
     </div>
 
     <script>
-        // Dark mode toggle
         const darkModeToggle = document.getElementById('darkModeToggle');
         darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             trackEvent('dark_mode_toggle', { enabled: document.body.classList.contains('dark-mode') });
         });
 
-        // Analytics functions
         function trackEvent(eventName, eventProperties = {}) {
             console.log('Event tracked:', eventName, eventProperties);
             fetch('/track-event', {
@@ -284,6 +267,42 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ eventName, eventProperties })
             });
+        }
+
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const image = entry.target;
+                    image.src = image.dataset.src;
+                    image.classList.add('loaded');
+                    observer.unobserve(image);
+                }
+            });
+        }, {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        });
+
+        function createLazyImage(imageSrc, alt) {
+            const container = document.createElement('div');
+            container.className = 'lazy-image-container';
+
+            const img = document.createElement('img');
+            img.className = 'lazy-image';
+            img.dataset.src = imageSrc;
+            img.alt = alt;
+
+            const placeholder = document.createElement('div');
+            placeholder.className = 'image-placeholder';
+            placeholder.textContent = '🚗';
+
+            container.appendChild(placeholder);
+            container.appendChild(img);
+
+            imageObserver.observe(img);
+
+            return container;
         }
 
         async function sendMessage() {
@@ -298,7 +317,10 @@
             const data = await response.json();
             
             const botResponseElement = document.getElementById('botResponse');
-            botResponseElement.innerText = data.response;
+            botResponseElement.innerHTML = `
+                ${data.response}
+                <button class="favorite-button" onclick="saveFavorite('${userInput.replace(/'/g, "\\'")}', '${data.response.replace(/'/g, "\\'")}')">⭐</button>
+            `;
             botResponseElement.classList.remove('show');
             void botResponseElement.offsetWidth; // Trigger reflow
             botResponseElement.classList.add('show');
@@ -307,15 +329,13 @@
             imageContainer.innerHTML = '';
             if (data.images && data.images.length > 0) {
                 data.images.forEach((imageSrc, index) => {
-                    const img = document.createElement('img');
-                    img.src = imageSrc;
-                    img.alt = 'Car part';
-                    img.style.animationDelay = `${index * 0.1}s`;
-                    imageContainer.appendChild(img);
-                    setTimeout(() => img.classList.add('show'), 50);
+                    const lazyImageContainer = createLazyImage(imageSrc, `Car part ${index + 1}`);
+                    imageContainer.appendChild(lazyImageContainer);
                 });
                 trackEvent('images_displayed', { count: data.images.length });
             }
+
+            await loadChatHistory();
         }
 
         async function compareCars() {
@@ -349,38 +369,11 @@
                 resultDiv.innerHTML = html;
                 trackEvent('comparison_displayed', { car1: data.car1.model, car2: data.car2.model });
             }
-            async function loadChatHistory() {
-            const response = await fetch('/chat-history');
-            const history = await response.json();
-            const chatHistoryElement = document.getElementById('chatHistory');
-            chatHistoryElement.innerHTML = '';
-            history.forEach(entry => {
-                const chatEntry = document.createElement('div');
-                chatEntry.className = 'chat-entry';
-                chatEntry.innerHTML = `
-                    <div class="timestamp">${new Date(entry.timestamp).toLocaleString()}</div>
-                    <div class="user-input">User: ${entry.user_input}</div>
-                    <div class="ai-response">AI: ${entry.ai_response}</div>
-                `;
-                chatHistoryElement.appendChild(chatEntry);
-            });
-        }
-
-        // Load chat history when the page loads
-        window.addEventListener('load', loadChatHistory);
-
-        // Update sendMessage function to refresh chat history after each message
-        async function sendMessage() {
-            // ... (existing sendMessage code) ...
-
-            // After sending the message and receiving the response, reload the chat history
-            await loadChatHistory();
-        }
             resultDiv.classList.remove('show');
             void resultDiv.offsetWidth; // Trigger reflow
             resultDiv.classList.add('show');
-
         }
+
         function saveFavorite(userInput, aiResponse) {
             let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
             favorites.push({ userInput, aiResponse });
@@ -431,50 +424,10 @@
             });
         }
 
-        // Load chat history and favorites when the page loads
         window.addEventListener('load', () => {
             loadChatHistory();
             displayFavorites();
         });
-
-        // Update sendMessage function to refresh chat history after each message
-        async function sendMessage() {
-            const userInput = document.getElementById('userInput').value;
-            trackEvent('send_message', { input: userInput });
-
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ input: userInput })
-            });
-            const data = await response.json();
-            
-            const botResponseElement = document.getElementById('botResponse');
-            botResponseElement.innerHTML = `
-                ${data.response}
-                <button class="favorite-button" onclick="saveFavorite('${userInput.replace(/'/g, "\\'")}', '${data.response.replace(/'/g, "\\'")}')">⭐</button>
-            `;
-            botResponseElement.classList.remove('show');
-            void botResponseElement.offsetWidth; // Trigger reflow
-            botResponseElement.classList.add('show');
-            
-            const imageContainer = document.getElementById('imageContainer');
-            imageContainer.innerHTML = '';
-            if (data.images && data.images.length > 0) {
-                data.images.forEach((imageSrc, index) => {
-                    const img = document.createElement('img');
-                    img.src = imageSrc;
-                    img.alt = 'Car part';
-                    img.style.animationDelay = `${index * 0.1}s`;
-                    imageContainer.appendChild(img);
-                    setTimeout(() => img.classList.add('show'), 50);
-                });
-                trackEvent('images_displayed', { count: data.images.length });
-            }
-
-            // After sending the message and receiving the response, reload the chat history
-            await loadChatHistory();
-        }
     </script>
 </body>
 </html>
