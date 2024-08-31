@@ -2,41 +2,252 @@
     {
       "model": "Toyota Camry",
       "year": 2022,
-      "engine": "2.5L 4-cylinder",
-      "horsepower": 203,
-      "mpg": 28,
-      "price": 25295
+      "manufacturer": "Toyota",
+      "category": "Midsize Sedan",
+      "engine": {
+        "type": "2.5L 4-cylinder",
+        "horsepower": 203,
+        "torque": "184 lb-ft",
+        "fuelType": "Gasoline"
+      },
+      "transmission": {
+        "type": "8-speed automatic",
+        "drivetrain": "Front-wheel drive"
+      },
+      "performance": {
+        "acceleration": "7.5 seconds 0-60 mph",
+        "topSpeed": "135 mph"
+      },
+      "fuelEconomy": {
+        "city": "28 mpg",
+        "highway": "39 mpg",
+        "combined": "32 mpg"
+      },
+      "dimensions": {
+        "length": "192.1 inches",
+        "width": "72.4 inches",
+        "height": "56.9 inches",
+        "wheelbase": "111.2 inches"
+      },
+      "weight": "3,310 lbs",
+      "safety": {
+        "airbags": "10 total airbags",
+        "assistSystems": [
+          "Pre-Collision System with Pedestrian Detection",
+          "Lane Departure Alert with Steering Assist",
+          "Automatic High Beams"
+        ]
+      },
+      "price": {
+        "base": 25295,
+        "fullyLoaded": 35720
+      },
+      "features": [
+        "7-inch touchscreen infotainment system",
+        "Apple CarPlay and Android Auto compatibility",
+        "Dual-zone automatic climate control",
+        "60/40 split fold-down rear seat"
+      ]
     },
     {
       "model": "Honda Accord",
       "year": 2022,
-      "engine": "1.5L Turbocharged 4-cylinder",
-      "horsepower": 192,
-      "mpg": 30,
-      "price": 26120
+      "manufacturer": "Honda",
+      "category": "Midsize Sedan",
+      "engine": {
+        "type": "1.5L Turbocharged 4-cylinder",
+        "horsepower": 192,
+        "torque": "192 lb-ft",
+        "fuelType": "Gasoline"
+      },
+      "transmission": {
+        "type": "Continuously Variable Transmission (CVT)",
+        "drivetrain": "Front-wheel drive"
+      },
+      "performance": {
+        "acceleration": "7.2 seconds 0-60 mph",
+        "topSpeed": "126 mph"
+      },
+      "fuelEconomy": {
+        "city": "30 mpg",
+        "highway": "38 mpg",
+        "combined": "33 mpg"
+      },
+      "dimensions": {
+        "length": "196.1 inches",
+        "width": "73.3 inches",
+        "height": "57.1 inches",
+        "wheelbase": "111.4 inches"
+      },
+      "weight": "3,131 lbs",
+      "safety": {
+        "airbags": "6 total airbags",
+        "assistSystems": [
+          "Collision Mitigation Braking System",
+          "Road Departure Mitigation System",
+          "Adaptive Cruise Control"
+        ]
+      },
+      "price": {
+        "base": 26120,
+        "fullyLoaded": 38050
+      },
+      "features": [
+        "8-inch touchscreen infotainment system",
+        "Apple CarPlay and Android Auto compatibility",
+        "Dual-zone automatic climate control",
+        "60/40 split fold-down rear seat"
+      ]
     },
     {
       "model": "Ford Mustang",
       "year": 2022,
-      "engine": "2.3L EcoBoost 4-cylinder",
-      "horsepower": 310,
-      "mpg": 21,
-      "price": 27470
+      "manufacturer": "Ford",
+      "category": "Sports Car",
+      "engine": {
+        "type": "2.3L EcoBoost 4-cylinder",
+        "horsepower": 310,
+        "torque": "350 lb-ft",
+        "fuelType": "Gasoline"
+      },
+      "transmission": {
+        "type": "6-speed manual",
+        "drivetrain": "Rear-wheel drive"
+      },
+      "performance": {
+        "acceleration": "5.1 seconds 0-60 mph",
+        "topSpeed": "155 mph"
+      },
+      "fuelEconomy": {
+        "city": "21 mpg",
+        "highway": "32 mpg",
+        "combined": "25 mpg"
+      },
+      "dimensions": {
+        "length": "188.5 inches",
+        "width": "75.4 inches",
+        "height": "54.3 inches",
+        "wheelbase": "107.1 inches"
+      },
+      "weight": "3,532 lbs",
+      "safety": {
+        "airbags": "8 total airbags",
+        "assistSystems": [
+          "Pre-Collision Assist with Automatic Emergency Braking",
+          "Lane-Keeping System",
+          "Blind Spot Information System"
+        ]
+      },
+      "price": {
+        "base": 27470,
+        "fullyLoaded": 55270
+      },
+      "features": [
+        "SYNC 3 infotainment system",
+        "Apple CarPlay and Android Auto compatibility",
+        "Dual-zone automatic climate control",
+        "Limited-slip rear differential"
+      ]
     },
     {
       "model": "Tesla Model 3",
       "year": 2022,
-      "engine": "Electric",
-      "horsepower": 283,
-      "mpg": 134,
-      "price": 44990
+      "manufacturer": "Tesla",
+      "category": "Electric Sedan",
+      "engine": {
+        "type": "Electric",
+        "horsepower": 283,
+        "torque": "307 lb-ft",
+        "fuelType": "Electric"
+      },
+      "transmission": {
+        "type": "Single-speed fixed gear",
+        "drivetrain": "Rear-wheel drive (base model)"
+      },
+      "performance": {
+        "acceleration": "5.3 seconds 0-60 mph",
+        "topSpeed": "140 mph"
+      },
+      "fuelEconomy": {
+        "city": "138 MPGe",
+        "highway": "126 MPGe",
+        "combined": "132 MPGe"
+      },
+      "range": "263 miles (EPA estimated)",
+      "dimensions": {
+        "length": "184.8 inches",
+        "width": "72.8 inches",
+        "height": "56.8 inches",
+        "wheelbase": "113.2 inches"
+      },
+      "weight": "3,552 lbs",
+      "safety": {
+        "airbags": "8 total airbags",
+        "assistSystems": [
+          "Autopilot",
+          "Forward Collision Warning",
+          "Automatic Emergency Braking"
+        ]
+      },
+      "price": {
+        "base": 44990,
+        "fullyLoaded": 58990
+      },
+      "features": [
+        "15-inch touchscreen infotainment system",
+        "Over-the-air software updates",
+        "Glass roof",
+        "Keyless entry and start"
+      ]
     },
     {
       "model": "Chevrolet Corvette",
       "year": 2022,
-      "engine": "6.2L V8",
-      "horsepower": 490,
-      "mpg": 16,
-      "price": 62195
+      "manufacturer": "Chevrolet",
+      "category": "Sports Car",
+      "engine": {
+        "type": "6.2L V8",
+        "horsepower": 490,
+        "torque": "465 lb-ft",
+        "fuelType": "Gasoline"
+      },
+      "transmission": {
+        "type": "8-speed dual-clutch automatic",
+        "drivetrain": "Rear-wheel drive"
+      },
+      "performance": {
+        "acceleration": "3.0 seconds 0-60 mph",
+        "topSpeed": "194 mph"
+      },
+      "fuelEconomy": {
+        "city": "16 mpg",
+        "highway": "24 mpg",
+        "combined": "19 mpg"
+      },
+      "dimensions": {
+        "length": "182.3 inches",
+        "width": "76.1 inches",
+        "height": "48.6 inches",
+        "wheelbase": "107.2 inches"
+      },
+      "weight": "3,366 lbs",
+      "safety": {
+        "airbags": "6 total airbags",
+        "assistSystems": [
+          "Rear Cross Traffic Alert",
+          "Side Blind Zone Alert",
+          "HD Rear Vision Camera"
+        ]
+      },
+      "price": {
+        "base": 62195,
+        "fullyLoaded": 84845
+      },
+      "features": [
+        "8-inch touchscreen infotainment system",
+        "Bose premium 10-speaker audio system",
+        "Performance Data Recorder",
+        "Magnetic Selective Ride Control"
+      ]
     }
   ]
