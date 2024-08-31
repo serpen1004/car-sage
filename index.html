@@ -5,41 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Car Expert Chatbot</title>
     <style>
-        /* ... (keep existing styles) ... */
-        #comparisionForm {
+        :root {
+            --bg-color: #f4f4f4;
+            --text-color: #333;
+            --input-bg: #fff;
+            --input-border: #ccc;
+            --button-bg: #007bff;
+            --button-text: #fff;
+            --card-bg: #fff;
+        }
+
+        .dark-mode {
+            --bg-color: #333;
+            --text-color: #f4f4f4;
+            --input-bg: #555;
+            --input-border: #777;
+            --button-bg: #0056b3;
+            --button-text: #fff;
+            --card-bg: #444;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        input[type="text"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #botResponse, #comparisonResult {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            background-color: var(--card-bg);
+        }
+
+        #imageContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             margin-top: 20px;
         }
-        #comparisonResult {
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            padding: 10px;
+
+        #imageContainer img {
+            max-width: 200px;
+            margin: 10px;
+            border: 1px solid var(--input-border);
             border-radius: 4px;
+            padding: 5px;
+        }
+
+        #darkModeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 600px) {
+            input[type="text"], button {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Chat with Car Expert Bot</h1>
-    <input type="text" id="userInput" placeholder="Ask about cars...">
-    <button onclick="sendMessage()">Send</button>
-    <p id="botResponse"></p>
-    <div id="imageContainer"></div>
+    <button id="darkModeToggle">Toggle Dark Mode</button>
+    <div class="container">
+        <h1>Chat with Car Expert Bot</h1>
+        <input type="text" id="userInput" placeholder="Ask about cars...">
+        <button onclick="sendMessage()">Send</button>
+        <div id="botResponse"></div>
+        <div id="imageContainer"></div>
 
-    <div id="comparisionForm">
         <h2>Compare Cars</h2>
         <input type="text" id="car1" placeholder="Enter first car model">
         <input type="text" id="car2" placeholder="Enter second car model">
         <button onclick="compareCars()">Compare</button>
+        <div id="comparisonResult"></div>
     </div>
-    <div id="comparisonResult"></div>
 
     <script>
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            trackEvent('dark_mode_toggle', { enabled: document.body.classList.contains('dark-mode') });
+        });
+
+        // Analytics functions
+        function trackEvent(eventName, eventProperties = {}) {
+            // In a real-world scenario, you'd send this data to your analytics service
+            console.log('Event tracked:', eventName, eventProperties);
+            fetch('/track-event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventName, eventProperties })
+            });
+        }
+
         async function sendMessage() {
             const userInput = document.getElementById('userInput').value;
+            trackEvent('send_message', { input: userInput });
+
             const response = await fetch('/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ input: userInput })
             });
             const data = await response.json();
@@ -54,17 +163,18 @@
                     img.alt = 'Car part';
                     imageContainer.appendChild(img);
                 });
+                trackEvent('images_displayed', { count: data.images.length });
             }
         }
 
         async function compareCars() {
             const car1 = document.getElementById('car1').value;
             const car2 = document.getElementById('car2').value;
+            trackEvent('compare_cars', { car1, car2 });
+
             const response = await fetch('/compare-cars', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ car1, car2 })
             });
             const data = await response.json();
@@ -75,6 +185,7 @@
             const resultDiv = document.getElementById('comparisonResult');
             if (data.error) {
                 resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                trackEvent('comparison_error', { error: data.error });
                 return;
             }
 
@@ -87,6 +198,7 @@
             
             html += '</table>';
             resultDiv.innerHTML = html;
+            trackEvent('comparison_displayed', { car1: data.car1.model, car2: data.car2.model });
         }
     </script>
 </body>
