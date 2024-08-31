@@ -1,19 +1,20 @@
-const axios = require('axios');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const API_KEY = 'AIzaSyAcXYTVEOpClYAoesGpAXHZFhs2bo1KPzE';  
+// Set up the Gemini API key
+const API_KEY = 'AIzaSyAcXYTVEOpClYAoesGpAXHZFhs2bo1KPzE';
+
+// Initialize the Gemini API client
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 async function getChatbotResponse(userInput) {
     try {
-        const response = await axios.post('https://api.gemini.com/v1/chat', {
-            input: userInput
-        }, {
-            headers: {
-                'Authorization': `Bearer ${API_KEY}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        return response.data.response;  
+        // Get the model
+        const model = await genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        
+        // Generate content based on user input
+        const result = await model.generateContent(userInput);
+        
+        return result.response.text();  
     } catch (error) {
         console.error('Error getting chatbot response:', error);
         return 'Sorry, I am having trouble understanding you right now.';
@@ -21,7 +22,7 @@ async function getChatbotResponse(userInput) {
 }
 
 (async () => {
-    const userInput = 'Hello! How are you today?';
+    const userInput = 'Hello!';
     const botResponse = await getChatbotResponse(userInput);
     console.log('Bot:', botResponse);
 })();
