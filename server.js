@@ -2,6 +2,7 @@ const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const path = require('path');
 const fs = require('fs').promises;
+const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const ANALYTICS_FILE = 'analytics_data.json';
 const CAR_DATA_FILE = 'carData.json';
+const DB_FILE = 'chat_history.db';
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '/')));
@@ -32,6 +34,30 @@ const carImages = {
 
 let carData = [];
 let analyticsData = [];
+let db;
+
+async function initDatabase() {
+  return new Promise((resolve, reject) => {
+    db = new sqlite3.Database(DB_FILE, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        db.run(`CREATE TABLE IF NOT EXISTS chat_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          user_input TEXT,
+          ai_response TEXT
+        )`, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      }
+    });
+  });
+}
 
 async function loadData() {
   try {
@@ -71,6 +97,18 @@ function logAnalyticsEvent(eventName, eventProperties) {
   console.log('Analytics event logged:', event);
 }
 
+function saveChatHistory(userInput, aiResponse) {
+  return new Promise((resolve, reject) => {
+    db.run('INSERT INTO chat_history (user_input, ai_response) VALUES (?, ?)', [userInput, aiResponse], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.lastID);
+      }
+    });
+  });
+}
+
 app.post('/chat', async (req, res) => {
   try {
     const userInput = req.body.input;
@@ -83,6 +121,7 @@ app.post('/chat', async (req, res) => {
       response.toLowerCase().includes(part.toLowerCase())
     );
 
+    await saveChatHistory(userInput, response);
     logAnalyticsEvent('chat_interaction', { input: userInput, responseLength: response.length, imagesShown: imageSuggestions.length });
 
     res.json({ 
@@ -96,58 +135,30 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-app.post('/compare-cars', (req, res) => {
-  const { car1, car2 } = req.body;
-  
-  const car1Data = carData.find(car => car.model.toLowerCase() === car1.toLowerCase());
-  const car2Data = carData.find(car => car.model.toLowerCase() === car2.toLowerCase());
-
-  if (!car1Data || !car2Data) {
-    logAnalyticsEvent('car_comparison_error', { car1, car2, error: 'One or both car models not found' });
-    return res.status(400).json({ error: 'One or both car models not found' });
-  }
-
-  const comparison = {
-    car1: car1Data,
-    car2: car2Data,
-    differences: {}
-  };
-
-  for (const key in car1Data) {
-    if (car1Data[key] !== car2Data[key]) {
-      comparison.differences[key] = {
-        car1: car1Data[key],
-        car2: car2Data[key]
-      };
+app.get('/chat-history', (req, res) => {
+  db.all('SELECT * FROM chat_history ORDER BY timestamp DESC LIMIT 50', (err, rows) => {
+    if (err) {
+      console.error('Error fetching chat history:', err);
+      res.status(500).json({ error: 'Failed to fetch chat history' });
+    } else {
+      res.json(rows);
     }
-  }
-
-  logAnalyticsEvent('car_comparison', { car1: car1Data.model, car2: car2Data.model, differencesCount: Object.keys(comparison.differences).length });
-  res.json(comparison);
+  });
 });
 
-app.post('/track-event', (req, res) => {
-  const { eventName, eventProperties } = req.body;
-  logAnalyticsEvent(eventName, eventProperties);
-  res.sendStatus(200);
-});
-
-app.get('/analytics', (req, res) => {
-  res.sendFile(path.join(__dirname, 'analytics.html'));
-});
-
-app.get('/analytics-data', (req, res) => {
-  res.json(analyticsData);
-});
+// ... (rest of the code remains the same)
 
 async function startServer() {
-  await loadData();
-  app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-  });
+  try {
+    await initDatabase();
+    await loadData();
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 }
 
-startServer().catch(error => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+startServer();

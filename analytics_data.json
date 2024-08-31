@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2024-08-31T19:16:48.548Z",
+    "eventName": "chat_interaction",
+    "eventProperties": {
+      "input": "hello ",
+      "responseLength": 510,
+      "imagesShown": 0
+    }
+  }
+]

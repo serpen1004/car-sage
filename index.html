@@ -150,6 +150,41 @@
             transform: scale(1.1);
         }
 
+        #chatHistory {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            max-height: 300px;
+            overflow-y: auto;
+            transition: all var(--transition-speed);
+        }
+
+        .chat-entry {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .chat-entry:nth-child(odd) {
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        .chat-entry .timestamp {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .chat-entry .user-input {
+            font-weight: bold;
+        }
+
+        .chat-entry .ai-response {
+            margin-top: 5px;
+        }
+
         @media (max-width: 600px) {
             input[type="text"], button {
                 font-size: 14px;
@@ -254,9 +289,37 @@
                 resultDiv.innerHTML = html;
                 trackEvent('comparison_displayed', { car1: data.car1.model, car2: data.car2.model });
             }
+            async function loadChatHistory() {
+            const response = await fetch('/chat-history');
+            const history = await response.json();
+            const chatHistoryElement = document.getElementById('chatHistory');
+            chatHistoryElement.innerHTML = '';
+            history.forEach(entry => {
+                const chatEntry = document.createElement('div');
+                chatEntry.className = 'chat-entry';
+                chatEntry.innerHTML = `
+                    <div class="timestamp">${new Date(entry.timestamp).toLocaleString()}</div>
+                    <div class="user-input">User: ${entry.user_input}</div>
+                    <div class="ai-response">AI: ${entry.ai_response}</div>
+                `;
+                chatHistoryElement.appendChild(chatEntry);
+            });
+        }
+
+        // Load chat history when the page loads
+        window.addEventListener('load', loadChatHistory);
+
+        // Update sendMessage function to refresh chat history after each message
+        async function sendMessage() {
+            // ... (existing sendMessage code) ...
+
+            // After sending the message and receiving the response, reload the chat history
+            await loadChatHistory();
+        }
             resultDiv.classList.remove('show');
             void resultDiv.offsetWidth; // Trigger reflow
             resultDiv.classList.add('show');
+
         }
     </script>
 </body>
