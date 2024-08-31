@@ -185,6 +185,61 @@
             margin-top: 5px;
         }
 
+        .favorite-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-left: 10px;
+            transition: transform 0.2s;
+        }
+
+        .favorite-button:hover {
+            transform: scale(1.2);
+        }
+
+        #favoriteResponses {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            max-height: 300px;
+            overflow-y: auto;
+            transition: all var(--transition-speed);
+        }
+
+        .favorite-entry {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .favorite-entry:nth-child(odd) {
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        .remove-favorite {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #ff4444;
+        }
+
+        .favorite-entry .user-input {
+            font-weight: bold;
+        }
+
+        .favorite-entry .ai-response {
+            margin-top: 5px;
+        }
+
         @media (max-width: 600px) {
             input[type="text"], button {
                 font-size: 14px;
@@ -206,6 +261,11 @@
         <input type="text" id="car2" placeholder="Enter second car model">
         <button onclick="compareCars()">Compare</button>
         <div id="comparisonResult"></div>
+        <h2>Chat History</h2>
+        <div id="chatHistory"></div>
+
+        <h2>Favorite Responses</h2>
+        <div id="favoriteResponses"></div>
     </div>
 
     <script>
@@ -320,6 +380,100 @@
             void resultDiv.offsetWidth; // Trigger reflow
             resultDiv.classList.add('show');
 
+        }
+        function saveFavorite(userInput, aiResponse) {
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            favorites.push({ userInput, aiResponse });
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            displayFavorites();
+        }
+
+        function removeFavorite(index) {
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            favorites.splice(index, 1);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            displayFavorites();
+        }
+
+        function displayFavorites() {
+            const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            const favoriteResponsesElement = document.getElementById('favoriteResponses');
+            favoriteResponsesElement.innerHTML = '';
+            favorites.forEach((favorite, index) => {
+                const favoriteEntry = document.createElement('div');
+                favoriteEntry.className = 'favorite-entry';
+                favoriteEntry.innerHTML = `
+                    <button class="remove-favorite" onclick="removeFavorite(${index})">❌</button>
+                    <div class="user-input">User: ${favorite.userInput}</div>
+                    <div class="ai-response">AI: ${favorite.aiResponse}</div>
+                `;
+                favoriteResponsesElement.appendChild(favoriteEntry);
+            });
+        }
+
+        async function loadChatHistory() {
+            const response = await fetch('/chat-history');
+            const history = await response.json();
+            const chatHistoryElement = document.getElementById('chatHistory');
+            chatHistoryElement.innerHTML = '';
+            history.forEach(entry => {
+                const chatEntry = document.createElement('div');
+                chatEntry.className = 'chat-entry';
+                chatEntry.innerHTML = `
+                    <div class="timestamp">${new Date(entry.timestamp).toLocaleString()}</div>
+                    <div class="user-input">User: ${entry.user_input}</div>
+                    <div class="ai-response">
+                        AI: ${entry.ai_response}
+                        <button class="favorite-button" onclick="saveFavorite('${entry.user_input.replace(/'/g, "\\'")}', '${entry.ai_response.replace(/'/g, "\\'")}')">⭐</button>
+                    </div>
+                `;
+                chatHistoryElement.appendChild(chatEntry);
+            });
+        }
+
+        // Load chat history and favorites when the page loads
+        window.addEventListener('load', () => {
+            loadChatHistory();
+            displayFavorites();
+        });
+
+        // Update sendMessage function to refresh chat history after each message
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput').value;
+            trackEvent('send_message', { input: userInput });
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input: userInput })
+            });
+            const data = await response.json();
+            
+            const botResponseElement = document.getElementById('botResponse');
+            botResponseElement.innerHTML = `
+                ${data.response}
+                <button class="favorite-button" onclick="saveFavorite('${userInput.replace(/'/g, "\\'")}', '${data.response.replace(/'/g, "\\'")}')">⭐</button>
+            `;
+            botResponseElement.classList.remove('show');
+            void botResponseElement.offsetWidth; // Trigger reflow
+            botResponseElement.classList.add('show');
+            
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.innerHTML = '';
+            if (data.images && data.images.length > 0) {
+                data.images.forEach((imageSrc, index) => {
+                    const img = document.createElement('img');
+                    img.src = imageSrc;
+                    img.alt = 'Car part';
+                    img.style.animationDelay = `${index * 0.1}s`;
+                    imageContainer.appendChild(img);
+                    setTimeout(() => img.classList.add('show'), 50);
+                });
+                trackEvent('images_displayed', { count: data.images.length });
+            }
+
+            // After sending the message and receiving the response, reload the chat history
+            await loadChatHistory();
         }
     </script>
 </body>
