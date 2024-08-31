@@ -26,6 +26,17 @@ const carImages = {
 // Load car data from a JSON file
 const carData = JSON.parse(fs.readFileSync('carData.json', 'utf8'));
 
+// File path for storing analytics data
+const ANALYTICS_FILE = 'analytics_data.json';
+
+// Load existing analytics data or initialize an empty array
+let analyticsData = [];
+try {
+    analyticsData = JSON.parse(fs.readFileSync(ANALYTICS_FILE, 'utf8'));
+} catch (error) {
+    console.log('No existing analytics file found. Starting with empty data.');
+}
+
 app.post('/chat', async (req, res) => {
     try {
         const userInput = req.body.input;
@@ -38,12 +49,15 @@ app.post('/chat', async (req, res) => {
             response.toLowerCase().includes(part.toLowerCase())
         );
 
+        logAnalyticsEvent('chat_interaction', { input: userInput, responseLength: response.length, imagesShown: imageSuggestions.length });
+
         res.json({ 
             response: response, 
             images: imageSuggestions.map(part => carImages[part])
         });
     } catch (error) {
         console.error('Error:', error);
+        logAnalyticsEvent('chat_error', { error: error.message });
         res.status(500).json({ response: 'Sorry, something went wrong.' });
     }
 });
@@ -55,6 +69,7 @@ app.post('/compare-cars', (req, res) => {
     const car2Data = carData.find(car => car.model.toLowerCase() === car2.toLowerCase());
 
     if (!car1Data || !car2Data) {
+        logAnalyticsEvent('car_comparison_error', { car1, car2, error: 'One or both car models not found' });
         return res.status(400).json({ error: 'One or both car models not found' });
     }
 
@@ -73,7 +88,33 @@ app.post('/compare-cars', (req, res) => {
         }
     }
 
+    logAnalyticsEvent('car_comparison', { car1: car1Data.model, car2: car2Data.model, differencesCount: Object.keys(comparison.differences).length });
     res.json(comparison);
+});
+
+app.post('/track-event', (req, res) => {
+    const { eventName, eventProperties } = req.body;
+    logAnalyticsEvent(eventName, eventProperties);
+    res.sendStatus(200);
+});
+
+function logAnalyticsEvent(eventName, eventProperties) {
+    const event = {
+        timestamp: new Date().toISOString(),
+        eventName,
+        eventProperties
+    };
+    analyticsData.push(event);
+    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(analyticsData, null, 2));
+    console.log('Analytics event logged:', event);
+}
+
+app.get('/analytics', (req, res) => {
+    res.sendFile(path.join(__dirname, 'analytics.html'));
+});
+
+app.get('/analytics-data', (req, res) => {
+    res.json(analyticsData);
 });
 
 app.listen(PORT, () => {

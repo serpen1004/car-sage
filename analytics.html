@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Expert Chatbot Analytics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .event {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .event-name {
+            font-weight: bold;
+            color: #3498db;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .properties {
+            margin-top: 10px;
+        }
+        .property {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Car Expert Chatbot Analytics</h1>
+    <div id="analytics-container"></div>
+
+    <script>
+        async function fetchAnalyticsData() {
+            const response = await fetch('/analytics-data');
+            const data = await response.json();
+            displayAnalyticsData(data);
+        }
+
+        function displayAnalyticsData(data) {
+            const container = document.getElementById('analytics-container');
+            data.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'event';
+                eventElement.innerHTML = `
+                    <div class="event-name">${event.eventName}</div>
+                    <div class="timestamp">${new Date(event.timestamp).toLocaleString()}</div>
+                    <div class="properties">
+                        ${Object.entries(event.eventProperties).map(([key, value]) => `
+                            <div class="property"><strong>${key}:</strong> ${value}</div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(eventElement);
+            });
+        }
+
+        fetchAnalyticsData();
+    </script>
+</body>
+</html>
